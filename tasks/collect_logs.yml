@@ -1,0 +1,64 @@
+- name: Check if remote logs dir exists
+  stat:
+    path: "{{ rhv_he_deploy_remote_log_dir }}"
+  register: rhv_he_deploy_remote_log_dir_stat
+
+# Don't "become" when using the local connection, or else
+# ansible will attempt to sudo these when run non-privileged
+- name: Ensure local logs dir exists
+  connection: local
+  become: false
+  file:
+    state: directory
+    path: "{{ rhv_he_deploy_log_dir }}"
+
+- name: "Write log to {{ rhv_he_deploy_log_dir }} on controller"
+  connection: local
+  become: false
+  copy:
+    content: "{{ item.value }}"
+    # e.g. hosted-engine-deploy-stdout.YYYY-MM-DDTHH:MM:SSZ.log
+    dest: "{{ rhv_he_deploy_log_dir }}/hosted-engine-deploy-{{ item.key }}.\
+           {{ ansible_date_time.iso8601 }}.log"
+  with_dict:
+    stdout: "{{ rhv_he_deploy_deployment.stdout }}"
+    stderr: "{{ rhv_he_deploy_deployment.stderr }}"
+  when: rhv_he_deploy_deployment is defined and
+        rhv_he_deploy_deployment is not skipped
+
+- block:
+    # Ideally, this would be a recursive fetch, but at the time of
+    # writing, the fetch module does not yet have recursive
+    # superpowers of recursion. Instead, make and fetch an archive.
+    - name: "Archive engine host log files"
+      archive:
+        path: /var/log/ovirt-hosted-engine-setup
+        dest: /var/log/ovirt-hosted-engine-setup/archive.tar.gz
+
+    - name: Fetch engine host log files to controller
+      fetch:
+        src: /var/log/ovirt-hosted-engine-setup/archive.tar.gz
+        dest: "{{ rhv_he_deploy_log_dir }}/archive.tar.gz"
+        flat: true
+
+    - name: "Extract log to {{ rhv_he_deploy_log_dir }} on controller"
+      connection: local
+      become: false
+      unarchive:
+        src: "{{ rhv_he_deploy_log_dir }}/archive.tar.gz"
+        dest: "{{ rhv_he_deploy_log_dir }}"
+
+    - name: Clean up engine log archive
+      connection: local
+      become: false
+      file:
+        state: absent
+        path: "{{ rhv_he_deploy_log_dir }}/archive.tar.gz"
+  when: rhv_he_deploy_remote_log_dir_stat.stat.exists
+
+- name: Fetch generated answerfile to controller
+  fetch:
+    src: "{{ rhv_he_deploy_answerfile_path }}"
+    dest: "{{ rhv_he_deploy_log_dir }}/answers.conf"
+    flat: true
+  when: rhv_he_deploy_answerfile_path is defined

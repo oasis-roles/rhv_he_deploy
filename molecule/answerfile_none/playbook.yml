@@ -1,0 +1,36 @@
+- name: Converge
+  hosts: all
+  roles:
+    - role: rhv_he_deploy
+  vars:
+    # prevent docker from trying to install hosted engine
+    rhv_he_deploy_rpms: []
+
+    # collect logs for test assertions later
+    rhv_he_deploy_collect_logs: true
+
+    # required vars
+    he_appliance_password: appliance
+    he_admin_password: admin
+    he_fqdn: test.fqdn
+    he_vm_ip_addr: 1.2.3.4
+    he_vm_ip_prefix: 0
+    # nfs/gluster doesn't use str_or_none, so this should be iscsi
+    he_domain_type: iscsi
+    he_storage_domain_addr: 5.6.7.8
+    he_root_ssh_pubkey: ssh-rsa test
+
+    # all vars using the str_or_none template macro
+    # the scenario checks that null values turn to none:None
+    he_bridge_if: null
+    he_gateway: null
+    he_iscsi_tpgt: null
+    he_iscsi_addr: null
+    he_iscsi_port: null
+    he_iscsi_username: null
+    he_iscsi_target: null
+    he_lun_id: null
+    he_dns_addr: null
+    he_emulated_machine: null
+    he_vm_mac_addr: null
+    rhv_he_deploy_firewall_manager: null

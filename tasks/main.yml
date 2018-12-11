@@ -1,0 +1,54 @@
+# Install packages and check deployment for idempotence
+- block:
+    - name: Install required packages
+      package:
+        state: present
+        name: "{{ rhv_he_deploy_rpms }}"
+
+    - name: Check if hosted-engine has already been deployed
+      command: hosted-engine --check-deployed
+      failed_when: false
+      changed_when: false
+      register: rhv_he_deploy_check
+  become: "{{ rhv_he_deploy_become }}"
+  become_user: "{{ rhv_he_deploy_become_user }}"
+
+# Only deploy hosted-engine if deploy check failed,
+# and optionally collect logs
+- block:
+    - name: Create temporary directory for answerfile
+      tempfile:
+        state: directory
+      register: rhv_he_deploy_answerfile_dir
+
+    - name: Set answerfile destination fact
+      set_fact:
+        rhv_he_deploy_answerfile_path: |-
+          {{ rhv_he_deploy_answerfile_dir.path }}/answers.conf
+
+    - name: Copy answerfile to host
+      template:
+        src: answers.j2.ini
+        dest: "{{ rhv_he_deploy_answerfile_path }}"
+
+    - name: Run hosted-engine deployment
+      command: |
+        hosted-engine --deploy
+        --config-append={{ rhv_he_deploy_answerfile_path }}
+      register: rhv_he_deploy_deployment
+      tags:
+        - rhv_he_deploy_run
+  when: rhv_he_deploy_check.rc != 0
+  always:
+    - include_tasks: collect_logs.yml
+      when: rhv_he_deploy_collect_logs
+
+    # do this after the collect log tasks since the generated answerfile
+    # gets fetched back when logging is enabled
+    - name: Remove answerfile after deployment
+      file:
+        path: "{{ rhv_he_deploy_answerfile_path }}"
+        state: absent
+      when: rhv_he_deploy_answerfile_path is defined
+  become: "{{ rhv_he_deploy_become }}"
+  become_user: "{{ rhv_he_deploy_become_user }}"

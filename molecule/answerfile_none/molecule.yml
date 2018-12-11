@@ -1,0 +1,40 @@
+dependency:
+  name: galaxy
+driver:
+  name: docker
+lint:
+  name: yamllint
+  options:
+    config-file: tests/yamllint.yml
+platforms:
+  - name: answerfile_none
+    image: centos:7
+provisioner:
+  name: ansible
+  lint:
+    name: ansible-lint
+  options:
+    v: true
+    # skip the step that actually runs hosted-engine,
+    # this scenario only tests answerfile generation
+    skip-tags: rhv_he_deploy_run
+scenario:
+  name: answerfile_none
+  # idempotence fails because of random tempdir answerfile location
+  test_sequence:
+    - lint
+    - destroy
+    - dependency
+    - syntax
+    - create
+    - prepare
+    - converge
+    - side_effect
+    - verify
+    - destroy
+verifier:
+  name: testinfra
+  options:
+    v: true
+  lint:
+    name: flake8
