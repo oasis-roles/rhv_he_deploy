@@ -1,5 +1,23 @@
 [![Build Status](https://travis-ci.org/oasis-roles/rhv_he_deploy.svg?branch=master)](https://travis-ci.org/oasis-roles/rhv_he_deploy)
 
+Deprecation
+===========
+The `ovirt.hosted_engine_setup` role is available on [Ansible Galaxy](
+https://galaxy.ansible.com/oVirt/hosted_engine_setup),
+and should be used instead of this role.
+
+The `rhv_he_deploy` role has been tested with RHV 4.2, but has not been
+and will not be tested on RHV 4.3 or higher due to its deprecation.
+
+The variables used by this role match, as closely as possible, the
+vars used by the corresponding oVirt role, but some minor changes will
+need to be made for it to work. Most notably, the `he_ansible_host_name`
+var, which is not included in the `rhv_he_deploy` role, has to be set
+when the Ansible control system and the target systems
+are not the same system (i.e. RHV is being installed on a different system
+than where ansible-playbook is being run). Otherwise, the oVirt-authored
+role should be a drop-in replacement for this role.
+
 rhv_he_deploy
 =============
 
