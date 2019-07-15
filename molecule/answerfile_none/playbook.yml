@@ -25,8 +25,8 @@
     he_bridge_if: null
     he_gateway: null
     he_iscsi_tpgt: null
-    he_iscsi_addr: null
-    he_iscsi_port: null
+    he_iscsi_portal_addr: null
+    he_iscsi_portal_port: null
     he_iscsi_username: null
     he_iscsi_target: null
     he_lun_id: null

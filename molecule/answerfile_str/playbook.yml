@@ -25,8 +25,8 @@
     he_bridge_if: bridgeIf
     he_gateway: gateway
     he_iscsi_tpgt: iSCSIPortal
-    he_iscsi_addr: iSCSIPortalIPAddress
-    he_iscsi_port: iSCSIPortalPort
+    he_iscsi_portal_addr: iSCSIPortalIPAddress
+    he_iscsi_portal_port: iSCSIPortalPort
     he_iscsi_username: iSCSIPortalUser
     he_iscsi_target: iSCSITargetName
     he_lun_id: LunID
